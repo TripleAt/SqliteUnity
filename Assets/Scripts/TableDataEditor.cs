@@ -44,7 +44,6 @@ public class TableDataEditor : EditorWindow
 	{
 		// AsyncTableQuery<T> オブジェクトを取得
 		MethodInfo tableMethod = db.GetType().GetMethod("Table")?.MakeGenericMethod(classType);
-		var interfaces = classType.GetInterfaces();
 		if (tableMethod == null)
 		{
 			return;
