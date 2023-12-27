@@ -7,9 +7,9 @@ public class DBLoad : MonoBehaviour
     // Start is called before the first frame update
     async void Start()
     {
-        var path = "C://Test/Testdb";
+        const string path = "C://Test/Testdb";
         var db = new SQLiteAsyncConnection(path);
-        TestTable test = await db.GetAsync<TestTable> (1);
+        var test = await db.GetAsync<TestTable> (1);
         Debug.Log(test.TextVal);
     }
 }

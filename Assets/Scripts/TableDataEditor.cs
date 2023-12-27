@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using SQLite;
 using UnityEditor;
@@ -9,7 +9,7 @@ using UnityEngine;
 
 public class TableDataEditor : EditorWindow
 {
-	[MenuItem("Window/Table Data Editor")]
+	[MenuItem("Tools/Table Data Editor")]
 	public static void ShowWindow()
 	{
 		GetWindow<TableDataEditor>("Table Data Editor");
@@ -28,29 +28,41 @@ public class TableDataEditor : EditorWindow
 		}
 	}
 
-	void SaveData()
+	private static void SaveData()
 	{
 		var classes = ClassLoader.LoadAllClasses("Tables"); // Replace 'YourNamespace' with the actual namespace
 
-		const string path = "C://Test/Testdb";
+		var path = Application.dataPath+"/db/testdb";  // テーブルの格納先変えました
 		var db = new SQLiteAsyncConnection(path);
 		foreach (var classType in classes)
 		{
-			SaveClass(classType, db);
+			SaveClass(classType, db).Forget();
 		}
 	}
 
-	private static async Task SaveClass(Type classType, SQLiteAsyncConnection db)
+	private static void LoadData()
+	{
+		var classes = ClassLoader.LoadAllClasses("Tables"); // Replace 'YourNamespace' with the actual namespace
+
+		var path = Application.dataPath+"/db/testdb";  // テーブルの格納先変えました
+		var db = new SQLiteAsyncConnection(path);
+		foreach (var classType in classes)
+		{
+			LoadClass(classType, db).Forget();
+		}
+	}
+
+	private static async UniTask SaveClass(Type classType, SQLiteAsyncConnection db)
 	{
 		// AsyncTableQuery<T> オブジェクトを取得
-		MethodInfo tableMethod = db.GetType().GetMethod("Table")?.MakeGenericMethod(classType);
+		var tableMethod = db.GetType().GetMethod("Table")?.MakeGenericMethod(classType);
 		if (tableMethod == null)
 		{
 			return;
 		}
 
 		var tableInstance = tableMethod.Invoke(db, null);
-		MethodInfo toListAsyncMethod = tableInstance.GetType().GetMethod("ToListAsync");
+		var toListAsyncMethod = tableInstance.GetType().GetMethod("ToListAsync");
 		if (toListAsyncMethod == null) return;
 
 		// UniTask から List<T> を非同期的に取得
@@ -63,10 +75,37 @@ public class TableDataEditor : EditorWindow
 		await File.WriteAllTextAsync(filePath, json);
 		Debug.Log("Saved: " + filePath);
 	}
-
-	void LoadData()
+	
+	private static async UniTask LoadClass(Type classType, SQLiteAsyncConnection db)
 	{
-		var classes = ClassLoader.LoadAllClasses("Tables"); // Replace 'YourNamespace' with the actual namespace
-		// Implement the logic to deserialize and load these classes from JSON
+		var filePath = Path.Combine(Application.dataPath, classType.Name + ".json");
+		if (!File.Exists(filePath))
+		{
+			Debug.Log("File not found: " + filePath);
+			return;
+		}
+
+		try
+		{
+			// テーブルが存在しない場合は作成
+			await db.CreateTableAsync(classType);
+
+			var json = await File.ReadAllTextAsync(filePath);
+			var listType = typeof(List<>).MakeGenericType(classType);
+			var listInstance = JsonConvert.DeserializeObject(json, listType) as System.Collections.IList;
+
+			if (listInstance != null)
+			{
+				foreach (var item in listInstance)
+				{
+					await db.InsertAsync(item);
+				}
+				Debug.Log("Data loaded and inserted into database.");
+			}
+		}
+		catch (Exception e)
+		{
+			Debug.LogError("Error loading JSON from file or inserting into database: " + e.Message);
+		}
 	}
 }
