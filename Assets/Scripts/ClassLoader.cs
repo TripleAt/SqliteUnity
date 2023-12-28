@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 public static class ClassLoader
@@ -21,4 +22,18 @@ public static class ClassLoader
 
 		return classList;
 	}
+
+	public static void DynamicCopyPropertiesWithCommonInterface(object source, object target, Type interfaceType)
+	{
+		foreach (var prop in interfaceType.GetProperties())
+		{
+			var sourceProp = source.GetType().GetProperty(prop.Name);
+			var targetProp = target.GetType().GetProperty(prop.Name);
+
+			if (sourceProp == null || targetProp == null || !targetProp.CanWrite) continue;
+			var valueToCopy = sourceProp.GetValue(source);
+			targetProp.SetValue(target, valueToCopy);
+		}
+	}
+
 }

@@ -1,7 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using Cysharp.Threading.Tasks;
+using MasterMemory;
+using MessagePack;
+using MessagePack.Resolvers;
 using Newtonsoft.Json;
 using SQLite;
 using UnityEditor;
@@ -26,8 +31,80 @@ public class TableDataEditor : EditorWindow
 		{
 			LoadData();
 		}
-	}
 
+		if (GUILayout.Button("SQLiteToMasterMemory"))
+		{
+			ImportMasterMemory().Forget();
+		}
+	}
+	private static async UniTask ImportMasterMemory()
+	{
+		InitializeMessagePack();
+
+		var tableClasses = ClassLoader.LoadAllClasses("Tables");
+		var masterClasses = ClassLoader.LoadAllClasses("Master");
+		var path = Application.dataPath + "/db/testdb";
+		var db = new SQLiteAsyncConnection(path);
+		var databaseBuilder = new DatabaseBuilder();
+
+		foreach (var tableType in tableClasses)
+		{
+			foreach (var masterType in masterClasses)
+			{
+				// 共通のインターフェースを持つ場合のみ続行
+				var commonInterfaces = tableType.GetInterfaces().Intersect(masterType.GetInterfaces());
+				if (!commonInterfaces.Any())
+				{
+					continue;
+				}
+
+				var sqliteData = await GetSQLiteValue(tableType, db);
+				var listType = typeof(List<>).MakeGenericType(masterType);
+				var listInstance = Activator.CreateInstance(listType);
+
+				foreach (var item in sqliteData)
+				{
+					var masterMemoryInstance = Activator.CreateInstance(masterType);
+					ClassLoader.DynamicCopyPropertiesWithCommonInterface(item, masterMemoryInstance, commonInterfaces.First());
+					listType.GetMethod("Add")?.Invoke(listInstance, new[] { masterMemoryInstance });
+				}
+
+				// DatabaseBuilder.Append の適切なオーバーロードを呼び出す
+				var appendMethod = FindAppendMethod(databaseBuilder.GetType(), listType);
+				if (appendMethod != null)
+				{
+					appendMethod.Invoke(databaseBuilder, new[] { listInstance });
+				}
+			}
+		}
+
+		SaveBinaryData(databaseBuilder);
+	}
+	
+	private static void InitializeMessagePack()
+	{
+		var messagePackResolvers = CompositeResolver.Create(
+			MasterMemoryResolver.Instance,
+			GeneratedResolver.Instance,
+			StandardResolver.Instance
+		);
+		var options = MessagePackSerializerOptions.Standard.WithResolver(messagePackResolvers);
+		MessagePackSerializer.DefaultOptions = options;
+	}
+	
+	private static void SaveBinaryData(DatabaseBuilderBase databaseBuilder)
+	{
+		var binary = databaseBuilder.Build();
+		const string binaryPath = "Assets/Master/Binary/Master.bytes";
+		var directory = Path.GetDirectoryName(binaryPath);
+		if (!Directory.Exists(directory) && directory != null)
+		{
+			Directory.CreateDirectory(directory);
+		}
+		File.WriteAllBytes(binaryPath, binary);
+		AssetDatabase.Refresh();
+	}
+	
 	private static void SaveData()
 	{
 		var classes = ClassLoader.LoadAllClasses("Tables"); // Replace 'YourNamespace' with the actual namespace
@@ -54,20 +131,11 @@ public class TableDataEditor : EditorWindow
 
 	private static async UniTask SaveClass(Type classType, SQLiteAsyncConnection db)
 	{
-		// AsyncTableQuery<T> オブジェクトを取得
-		var tableMethod = db.GetType().GetMethod("Table")?.MakeGenericMethod(classType);
-		if (tableMethod == null)
+		var listInstance = await GetSQLiteValue(classType, db);
+		if (listInstance == null)
 		{
 			return;
 		}
-
-		var tableInstance = tableMethod.Invoke(db, null);
-		var toListAsyncMethod = tableInstance.GetType().GetMethod("ToListAsync");
-		if (toListAsyncMethod == null) return;
-
-		// UniTask から List<T> を非同期的に取得
-		dynamic task = toListAsyncMethod.Invoke(tableInstance, null);
-		var listInstance = await task;
 
 		// JSONにシリアライズしてファイルに保存
 		var json = JsonConvert.SerializeObject(listInstance, Formatting.Indented);
@@ -75,7 +143,45 @@ public class TableDataEditor : EditorWindow
 		await File.WriteAllTextAsync(filePath, json);
 		Debug.Log("Saved: " + filePath);
 	}
+
+	private static MethodInfo FindAppendMethod(Type databaseBuilderType, Type listType)
+	{
+		foreach (var method in databaseBuilderType.GetMethods())
+		{
+			if (method.Name != "Append" || method.GetParameters().Length != 1)
+			{
+				continue;
+			}
+			var parameterType = method.GetParameters()[0].ParameterType;
+			if (parameterType.IsAssignableFrom(listType))
+			{
+				return method;
+			}
+		}
+		return null;
+	}
 	
+	private static async UniTask<dynamic> GetSQLiteValue(Type classType, SQLiteAsyncConnection db)
+	{
+		// AsyncTableQuery<T> オブジェクトを取得
+		var tableMethod = db.GetType().GetMethod("Table")?.MakeGenericMethod(classType);
+		if (tableMethod == null)
+		{
+			return null;
+		}
+
+		var tableInstance = tableMethod.Invoke(db, null);
+		var toListAsyncMethod = tableInstance.GetType().GetMethod("ToListAsync");
+		if (toListAsyncMethod == null)
+		{
+			return null;
+		}
+
+		// UniTask から List<T> を非同期的に取得
+		dynamic task = toListAsyncMethod.Invoke(tableInstance, null);
+		return await task;
+	}
+
 	private static async UniTask LoadClass(Type classType, SQLiteAsyncConnection db)
 	{
 		var filePath = Path.Combine(Application.dataPath, classType.Name + ".json");

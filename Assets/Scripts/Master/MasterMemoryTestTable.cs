@@ -1,12 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using MasterMemory;
 using MessagePack;
-using UnityEngine;
+using Tables;
 
-[MemoryTable("TestTable"), MessagePackObject( true )]
-public class MasterMemoryTestTable
+namespace Master
 {
-    [PrimaryKey] public int Id { get; set; }
-    public string TextVal { get; set; }
+    [MemoryTable("TestTable"), MessagePackObject( true )]
+    public class MasterMemoryTestTable : ITestTable
+    {
+        [PrimaryKey] public int Id { get; set; }
+        public string TextVal { get; set; }
+    }
 }
