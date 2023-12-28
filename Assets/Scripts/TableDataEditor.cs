@@ -37,6 +37,7 @@ public class TableDataEditor : EditorWindow
 			ImportMasterMemory().Forget();
 		}
 	}
+
 	private static async UniTask ImportMasterMemory()
 	{
 		InitializeMessagePack();
@@ -62,6 +63,7 @@ public class TableDataEditor : EditorWindow
 				var listType = typeof(List<>).MakeGenericType(masterType);
 				var listInstance = Activator.CreateInstance(listType);
 
+				// 内容をコピーして再度Listに詰める(再定義されたListに詰める作業いらんかもしれん)
 				foreach (var item in sqliteData)
 				{
 					var masterMemoryInstance = Activator.CreateInstance(masterType);
@@ -69,7 +71,7 @@ public class TableDataEditor : EditorWindow
 					listType.GetMethod("Add")?.Invoke(listInstance, new[] { masterMemoryInstance });
 				}
 
-				// DatabaseBuilder.Append の適切なオーバーロードを呼び出す
+				// 基底クラスに合うメソッドを探してくる
 				var appendMethod = FindAppendMethod(databaseBuilder.GetType(), listType);
 				if (appendMethod != null)
 				{
@@ -107,8 +109,7 @@ public class TableDataEditor : EditorWindow
 	
 	private static void SaveData()
 	{
-		var classes = ClassLoader.LoadAllClasses("Tables"); // Replace 'YourNamespace' with the actual namespace
-
+		var classes = ClassLoader.LoadAllClasses("Tables"); 
 		var path = Application.dataPath+"/db/testdb";  // テーブルの格納先変えました
 		var db = new SQLiteAsyncConnection(path);
 		foreach (var classType in classes)
@@ -119,7 +120,7 @@ public class TableDataEditor : EditorWindow
 
 	private static void LoadData()
 	{
-		var classes = ClassLoader.LoadAllClasses("Tables"); // Replace 'YourNamespace' with the actual namespace
+		var classes = ClassLoader.LoadAllClasses("Tables"); 
 
 		var path = Application.dataPath+"/db/testdb";  // テーブルの格納先変えました
 		var db = new SQLiteAsyncConnection(path);
