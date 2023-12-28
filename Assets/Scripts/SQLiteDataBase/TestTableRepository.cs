@@ -1,5 +1,4 @@
 using Cysharp.Threading.Tasks;
-using Tables;
 
 public static class TestTableRepository
 {

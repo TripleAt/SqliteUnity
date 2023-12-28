@@ -10,10 +10,4 @@ namespace Tables
 		[MaxLength(64)]
 		public string TextVal{ get; set; }
 	}
-
-	public interface ITestTable
-	{
-		public int Id { get; set; }
-		public string TextVal { get; set; }
-	}
 }

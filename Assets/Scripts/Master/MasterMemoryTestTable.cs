@@ -1,6 +1,5 @@
 using MasterMemory;
 using MessagePack;
-using Tables;
 
 namespace Master
 {

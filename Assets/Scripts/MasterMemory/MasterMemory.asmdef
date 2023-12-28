@@ -1,10 +1,10 @@
 {
     "name": "MasterMemory",
+    "rootNamespace": "",
     "references": [
         "MessagePack",
         "MessagePack.Annotations"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
@@ -15,5 +15,7 @@
         "System.Runtime.CompilerServices.Unsafe.dll"
     ],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
