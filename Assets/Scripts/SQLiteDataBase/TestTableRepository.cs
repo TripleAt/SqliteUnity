@@ -1,17 +1,17 @@
 using Cysharp.Threading.Tasks;
-using SQLiteDataBase;
 
-#if Connection_MasterMemory
-using System;
+#if Connection_MasterMemory || !UNITY_EDITOR
 using VContainer;
 #else
+using SQLiteDataBase;
 using SQLite;
 using Tables;
+using UnityEditor;
 #endif
 
 public class TestTableRepository
 {
-#if Connection_MasterMemory 
+#if Connection_MasterMemory || !UNITY_EDITOR 
     private readonly MasterMemoryData _master;
     
     [Inject]
@@ -24,12 +24,12 @@ public class TestTableRepository
     public async UniTask<ITestTable> GetDataAsync(int index)
     {
         ITestTable data;
-#if Connection_MasterMemory // プリプロセッサディレクティブで使いわけしたりデータキャッシュできる仕組みにできるとさらに良さそう
+#if Connection_MasterMemory || !UNITY_EDITOR
         data = _master.DB.MasterMemoryTestTableTable.FindById(index);
 #else
         var path = "";
 #if UNITY_EDITOR
-        path = SQLiteDataBaseSettings.instance.MasterPath + "/" + SQLiteDataBaseSettings.instance.MasterName;
+        path = AssetDatabase.GetAssetPath(SQLiteDataBaseSettings.instance.SQLData);
 #endif
         var db = new SQLiteAsyncConnection(path);
         data = await db.GetAsync<TestTable> (index);
