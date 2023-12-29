@@ -18,11 +18,13 @@ using UnityEngine;
 /// </summary>
 public class TableDataEditor : EditorWindow
 {
-	private static readonly SQLiteDataBaseSettings _settings = SQLiteDataBaseSettings.instance;
+	private static SQLiteDataBaseSettings _settings;
+	private const string FilePath = "Assets/Settings/SQLiteDataBaseSettings.asset";
 
 	[MenuItem("Tools/Table Data Editor")]
 	public static void ShowWindow()
 	{
+		_settings = AssetDatabase.LoadAssetAtPath<SQLiteDataBaseSettings>(FilePath);
 		GetWindow<TableDataEditor>("Table Data Editor");
 	}
 

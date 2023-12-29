@@ -6,8 +6,8 @@ using Object = UnityEngine.Object;
 namespace SQLiteDataBase
 {
     [Serializable]
-    [FilePath("ProjectSettings/SQLiteDataBaseSettings.asset", FilePathAttribute.Location.ProjectFolder)]
-    public class SQLiteDataBaseSettings : ScriptableSingleton<SQLiteDataBaseSettings>
+    [FilePath("Assets/Settings/SQLiteDataBaseSettings.asset", FilePathAttribute.Location.ProjectFolder)]
+    public class SQLiteDataBaseSettings : ScriptableObject
     {
         [Header("SQLite DB")]
         [SerializeField]
@@ -24,12 +24,6 @@ namespace SQLiteDataBase
         [Header("MasterMemory Byte名")]
         [SerializeField]
         public string MasterName =　@"Master.bytes";
-        
-        
-        public void Save()
-        {
-            Save(true);
-        }
     }
 
     [CustomEditor(typeof(SQLiteDataBaseSettings))]

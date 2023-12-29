@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using VContainer;
 
 #if Connection_MasterMemory || !UNITY_EDITOR
 using VContainer;
@@ -19,7 +20,15 @@ public class TestTableRepository
     {
         _master = masterMemoryData;
     }
+#else
+    private static SQLiteDataBaseSettings _settings;
+    [Inject]
+    public TestTableRepository(SQLiteDataBaseSettings settings)
+    {
+        _settings = settings;
+    }
 #endif
+    
 
     public async UniTask<ITestTable> GetDataAsync(int index)
     {
@@ -29,7 +38,7 @@ public class TestTableRepository
 #else
         var path = "";
 #if UNITY_EDITOR
-        path = AssetDatabase.GetAssetPath(SQLiteDataBaseSettings.instance.SQLData);
+        path = AssetDatabase.GetAssetPath(_settings.SQLData);
 #endif
         var db = new SQLiteAsyncConnection(path);
         data = await db.GetAsync<TestTable> (index);

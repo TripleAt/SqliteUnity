@@ -10,7 +10,9 @@ namespace SQLiteDataBase
     {
         // Projectウィンドウでの表示位置
         private const string SettingsPath = "Project/SQLiteDataBaseSettings";
+        private const string FilePath = "Assets/Settings/SQLiteDataBaseSettings.asset";
         private Editor _editor;
+        private SQLiteDataBaseSettings preferences;
 
         [SettingsProvider]
         public static SettingsProvider CreateProvider()
@@ -32,8 +34,15 @@ namespace SQLiteDataBase
         /// <inheritdoc/>
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
-            var preferences = SQLiteDataBaseSettings.instance;
-            preferences.hideFlags = HideFlags.HideAndDontSave & ~HideFlags.NotEditable; // ScriptableSingletonを編集可能にする
+            preferences = AssetDatabase.LoadAssetAtPath<SQLiteDataBaseSettings>(FilePath);
+            if (preferences == null)
+            {
+                // 設定ファイルが存在しない場合、新しく作成
+                preferences = ScriptableObject.CreateInstance<SQLiteDataBaseSettings>();
+                AssetDatabase.CreateAsset(preferences, FilePath);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
 
             // 設定ファイルの標準のインスペクターのエディタを生成
             Editor.CreateCachedEditor(preferences, null, ref _editor);
@@ -48,8 +57,8 @@ namespace SQLiteDataBase
                 _editor.OnInspectorGUI();
                 if (check.changed)
                 {
-                    // 差分があったら保存
-                    SQLiteDataBaseSettings.instance.Save();
+                    EditorUtility.SetDirty(_editor.target);
+                    AssetDatabase.SaveAssets();
                 }
             }
         }
