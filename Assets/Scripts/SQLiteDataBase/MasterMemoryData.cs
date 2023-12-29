@@ -1,12 +1,24 @@
 
-using System.IO;
+using System;
+using System.Text.RegularExpressions;
 using MasterMemory;
+using SQLiteDataBase;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using VContainer;
 
-public class MasterMemoryData
+public class MasterMemoryData : IDisposable
 {
     private MemoryDatabase _db;
-    private string _binaryPath = "Assets/Master/Binary/Master.bytes";
+    private SQLiteDataBaseSettings _settings;
+    private AsyncOperationHandle<byte[]> _op;
+
+    [Inject]
+    public MasterMemoryData(SQLiteDataBaseSettings settings)
+    {
+        _settings = settings;
+    }
 
     public MemoryDatabase DB
     {
@@ -20,13 +32,16 @@ public class MasterMemoryData
         }
     }
 
-    public void DownloadMasterData(string binaryPath = "")
+    private void DownloadMasterData()
     {
-        if (binaryPath.Equals(string.Empty))
+        const string pattern = "Assets.*$";
+        var match = Regex.Match(_settings.MasterPath + "/" + _settings.MasterName, pattern);
+        if (!match.Success)
         {
-            _binaryPath = binaryPath;
+            return;
         }
-        var data = LoadBinaryData(_binaryPath);
+
+        var data = LoadBinaryData(match.Value);
         if (data != null)
         {
             _db = new MemoryDatabase(data);
@@ -34,16 +49,20 @@ public class MasterMemoryData
     }
     
     // Note:実際はAddressablesとかで読んでくると良さそう.
-    private static byte[] LoadBinaryData(string binaryPath)
+    private byte[] LoadBinaryData(string binaryPath)
     {
-        if (File.Exists(binaryPath))
+        _op = Addressables.LoadAssetAsync<byte[]>(binaryPath);
+        
+        var data = _op.WaitForCompletion();
+        if (data == null)
         {
-            var binary = File.ReadAllBytes(binaryPath);
-            return binary;
+            Debug.LogError("ファイルが見つかりません: " + binaryPath);
         }
+        return data;
+    }
 
-        Debug.LogError("ファイルが見つかりません: " + binaryPath);
-
-        return null;
+    public void Dispose()
+    {
+        Addressables.Release(_op);
     }
 }

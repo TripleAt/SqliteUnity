@@ -1,0 +1,16 @@
+{
+    "name": "SQLiteDataBase.Editor",
+    "rootNamespace": "",
+    "references": ["GUID:acf77b8a6f9064640b49cf41e36aa899","GUID:f51ebe6a0ceec4240a699833d6309b23","GUID:805980514ba504f81851edcc0ea07a74","GUID:bbde805d927e795439d7a746d1749cab","GUID:0632cc6b22db61d41898dfef78dc32f5"],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
