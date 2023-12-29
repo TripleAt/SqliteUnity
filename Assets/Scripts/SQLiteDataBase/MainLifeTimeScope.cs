@@ -7,6 +7,5 @@ public class MainLifeTimeScope : LifetimeScope
     { 
         builder.Register<TestTableRepository>(Lifetime.Singleton);
         builder.Register<MasterMemoryData>(Lifetime.Singleton);
-        //builder.RegisterEntryPoint<>(Lifetime.Singleton);
     }
 }

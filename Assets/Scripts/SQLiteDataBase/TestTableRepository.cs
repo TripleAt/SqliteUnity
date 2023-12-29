@@ -1,10 +1,17 @@
-using System;
 using Cysharp.Threading.Tasks;
-using VContainer;
+using SQLiteDataBase;
 
-public class TestTableRepository:IDisposable
+#if Connection_MasterMemory
+using System;
+using VContainer;
+#else
+using SQLite;
+using Tables;
+#endif
+
+public class TestTableRepository
 {
-#if Connection_MasterMemory // プリプロセッサディレクティブで使いわけしたりデータキャッシュできる仕組みにできるとさらに良さそう
+#if Connection_MasterMemory 
     private readonly MasterMemoryData _master;
     
     [Inject]
@@ -20,14 +27,13 @@ public class TestTableRepository:IDisposable
 #if Connection_MasterMemory // プリプロセッサディレクティブで使いわけしたりデータキャッシュできる仕組みにできるとさらに良さそう
         data = _master.DB.MasterMemoryTestTableTable.FindById(index);
 #else
-        var path = Application.dataPath + "/db/testdb";
+        var path = "";
+#if UNITY_EDITOR
+        path = SQLiteDataBaseSettings.instance.MasterPath + "/" + SQLiteDataBaseSettings.instance.MasterName;
+#endif
         var db = new SQLiteAsyncConnection(path);
-        data = await db.GetAsync<TestTable> (1);
+        data = await db.GetAsync<TestTable> (index);
 #endif
        return data;
-    }
-
-    public void Dispose()
-    {
     }
 }

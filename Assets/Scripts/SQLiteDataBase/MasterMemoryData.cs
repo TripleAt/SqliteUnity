@@ -6,6 +6,7 @@ using UnityEngine;
 public class MasterMemoryData
 {
     private MemoryDatabase _db;
+    private string _binaryPath = "Assets/Master/Binary/Master.bytes";
 
     public MemoryDatabase DB
     {
@@ -19,11 +20,13 @@ public class MasterMemoryData
         }
     }
 
-    private void DownloadMasterData()
+    public void DownloadMasterData(string binaryPath = "")
     {
-        const string binaryPath = "Assets/Master/Binary/Master.bytes";
-
-        var data = LoadBinaryData(binaryPath);
+        if (binaryPath.Equals(string.Empty))
+        {
+            _binaryPath = binaryPath;
+        }
+        var data = LoadBinaryData(_binaryPath);
         if (data != null)
         {
             _db = new MemoryDatabase(data);
