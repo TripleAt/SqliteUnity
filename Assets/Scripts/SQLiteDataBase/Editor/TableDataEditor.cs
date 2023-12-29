@@ -9,11 +9,17 @@ using MessagePack;
 using MessagePack.Resolvers;
 using Newtonsoft.Json;
 using SQLite;
+using SQLiteDataBase;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+/// テーブル更新エディター機能ウィンドウ.
+/// </summary>
 public class TableDataEditor : EditorWindow
 {
+	private static readonly SQLiteDataBaseSettings _settings = SQLiteDataBaseSettings.instance;
+
 	[MenuItem("Tools/Table Data Editor")]
 	public static void ShowWindow()
 	{
@@ -44,7 +50,7 @@ public class TableDataEditor : EditorWindow
 
 		var tableClasses = ClassLoader.LoadAllClasses("Tables");
 		var masterClasses = ClassLoader.LoadAllClasses("Master");
-		var path = Application.dataPath + "/db/testdb";
+		var path = AssetDatabase.GetAssetPath(_settings.SQLData);
 		var db = new SQLiteAsyncConnection(path);
 		var databaseBuilder = new DatabaseBuilder();
 
@@ -97,7 +103,7 @@ public class TableDataEditor : EditorWindow
 	private static void SaveBinaryData(DatabaseBuilderBase databaseBuilder)
 	{
 		var binary = databaseBuilder.Build();
-		const string binaryPath = "Assets/Master/Binary/Master.bytes";
+		var binaryPath = _settings.MasterPath + "/" + _settings.MasterName;
 		var directory = Path.GetDirectoryName(binaryPath);
 		if (!Directory.Exists(directory) && directory != null)
 		{
@@ -110,7 +116,7 @@ public class TableDataEditor : EditorWindow
 	private static void SaveData()
 	{
 		var classes = ClassLoader.LoadAllClasses("Tables"); 
-		var path = Application.dataPath+"/db/testdb";  // テーブルの格納先変えました
+		var path = AssetDatabase.GetAssetPath(_settings.SQLData);
 		var db = new SQLiteAsyncConnection(path);
 		foreach (var classType in classes)
 		{
@@ -122,7 +128,7 @@ public class TableDataEditor : EditorWindow
 	{
 		var classes = ClassLoader.LoadAllClasses("Tables"); 
 
-		var path = Application.dataPath+"/db/testdb";  // テーブルの格納先変えました
+		var path = AssetDatabase.GetAssetPath(_settings.SQLData);
 		var db = new SQLiteAsyncConnection(path);
 		foreach (var classType in classes)
 		{
@@ -185,7 +191,7 @@ public class TableDataEditor : EditorWindow
 
 	private static async UniTask LoadClass(Type classType, SQLiteAsyncConnection db)
 	{
-		var filePath = Path.Combine(Application.dataPath, classType.Name + ".json");
+		var filePath = Path.Combine(_settings.JsonPath, classType.Name + ".json");
 		if (!File.Exists(filePath))
 		{
 			Debug.Log("File not found: " + filePath);

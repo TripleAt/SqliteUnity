@@ -1,6 +1,7 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace SQLiteDataBase
 {
@@ -8,14 +9,23 @@ namespace SQLiteDataBase
     [FilePath("ProjectSettings/SQLiteDataBaseSettings.asset", FilePathAttribute.Location.ProjectFolder)]
     public class SQLiteDataBaseSettings : ScriptableSingleton<SQLiteDataBaseSettings>
     {
-        [Header("SQLiteDB保存先")]
+        [Header("SQLite DB")]
         [SerializeField]
-        public string pathPattern =　@"";
+        public Object SQLData;
 
         [Header("SQLite Json保存先")]
         [SerializeField]
-        public string pathJsonPattern =　@"";
+        public string JsonPath =　@"";
 
+        [Header("MasterMemory Byte保存先")]
+        [SerializeField]
+        public string MasterPath =　@"";
+        
+        [Header("MasterMemory Byte名")]
+        [SerializeField]
+        public string MasterName =　@"Master.bytes";
+        
+        
         public void Save()
         {
             Save(true);
@@ -30,13 +40,29 @@ namespace SQLiteDataBase
             var actionUser = (SQLiteDataBaseSettings)target;
 
             EditorGUILayout.LabelField("SQLiteDB保存先", EditorStyles.boldLabel);
-            var pathPattern = EditorGUILayout.TextField("Path Pattern", actionUser.pathPattern);
-            actionUser.pathPattern = pathPattern;
+            var sqlData = EditorGUILayout.ObjectField("Path Pattern", actionUser.SQLData, typeof(Object), false);
+            actionUser.SQLData = sqlData;
+            GUILayout.Space(10);
 
             EditorGUILayout.LabelField("SQLite Json保存先", EditorStyles.boldLabel);
-            var pathJsonPattern = EditorGUILayout.TextField("Path Pattern", actionUser.pathJsonPattern);
-            actionUser.pathJsonPattern = pathJsonPattern;
+            EditorGUILayout.LabelField("Selected Path:", actionUser.JsonPath);
+            if (GUILayout.Button("Select Folder",GUILayout.Width(100), GUILayout.Height(20)))
+            {
+                actionUser.JsonPath = SelectFolderPath(actionUser.JsonPath);
+            }
+            GUILayout.Space(10);
 
+            EditorGUILayout.LabelField("MasterMemory Byte保存先", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Selected Path:", actionUser.MasterPath);
+            if (GUILayout.Button("Select Folder",GUILayout.Width(100), GUILayout.Height(20)))
+            {
+                actionUser.MasterPath = SelectFolderPath(actionUser.MasterPath);
+            }
+            GUILayout.Space(10);
+            
+            var masterName = EditorGUILayout.TextField("MasterMemory Name", actionUser.MasterName);
+            actionUser.MasterName = masterName;
+ 
             // Force Unity to save the changes
             if (!GUI.changed)
             {
@@ -45,6 +71,12 @@ namespace SQLiteDataBase
 
             EditorUtility.SetDirty(actionUser);
             AssetDatabase.SaveAssets();
+        }
+    
+        private static string SelectFolderPath(string setting)
+        {
+            var selectedPath = EditorUtility.OpenFolderPanel("Select a folder", setting, "");
+            return string.IsNullOrEmpty(selectedPath) ? "" : selectedPath;
         }
     }
 }
