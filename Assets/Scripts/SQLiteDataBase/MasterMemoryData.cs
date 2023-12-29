@@ -3,12 +3,11 @@ using System.IO;
 using MasterMemory;
 using UnityEngine;
 
-public static class MasterMemoryData
+public class MasterMemoryData
 {
-    private static MemoryDatabase _db;
+    private MemoryDatabase _db;
 
-    // とりあえず、シングルトンで処理(DIにするともっと良いよね)
-    public static MemoryDatabase DB
+    public MemoryDatabase DB
     {
         get
         {
@@ -20,7 +19,7 @@ public static class MasterMemoryData
         }
     }
 
-    private static void DownloadMasterData()
+    private void DownloadMasterData()
     {
         const string binaryPath = "Assets/Master/Binary/Master.bytes";
 

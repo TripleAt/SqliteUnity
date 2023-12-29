@@ -1,11 +1,14 @@
 using UnityEngine;
+using VContainer;
 
 public class DBLoad : MonoBehaviour
 {
-    // Start is called before the first frame update
+    [Inject]
+    private TestTableRepository repository;
+    
     private async void Start()
-    {
-        var data = await TestTableRepository.GetDataAsync(1);
+    { 
+        var data = await repository.GetDataAsync(1);
         Debug.Log(data.TextVal);
     }
 }

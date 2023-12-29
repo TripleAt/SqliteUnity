@@ -1,17 +1,33 @@
+using System;
 using Cysharp.Threading.Tasks;
+using VContainer;
 
-public static class TestTableRepository
+public class TestTableRepository:IDisposable
 {
-    public static async UniTask<ITestTable> GetDataAsync(int index)
+#if Connection_MasterMemory // プリプロセッサディレクティブで使いわけしたりデータキャッシュできる仕組みにできるとさらに良さそう
+    private readonly MasterMemoryData _master;
+    
+    [Inject]
+    public TestTableRepository(MasterMemoryData masterMemoryData)
+    {
+        _master = masterMemoryData;
+    }
+#endif
+
+    public async UniTask<ITestTable> GetDataAsync(int index)
     {
         ITestTable data;
-#if true // プリプロセッサディレクティブで使いわけしたりデータキャッシュできる仕組みにできるとさらに良さそう
-        data = MasterMemoryData.DB.MasterMemoryTestTableTable.FindById(index);
+#if Connection_MasterMemory // プリプロセッサディレクティブで使いわけしたりデータキャッシュできる仕組みにできるとさらに良さそう
+        data = _master.DB.MasterMemoryTestTableTable.FindById(index);
 #else
         var path = Application.dataPath + "/db/testdb";
         var db = new SQLiteAsyncConnection(path);
         data = await db.GetAsync<TestTable> (1);
 #endif
-        return data;
+       return data;
+    }
+
+    public void Dispose()
+    {
     }
 }
