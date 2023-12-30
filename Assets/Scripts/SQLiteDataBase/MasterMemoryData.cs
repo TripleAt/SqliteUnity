@@ -12,7 +12,7 @@ public class MasterMemoryData : IDisposable
 {
     private MemoryDatabase _db;
     private SQLiteDataBaseSettings _settings;
-    private AsyncOperationHandle<byte[]> _op;
+    private AsyncOperationHandle<TextAsset> _op;
 
     [Inject]
     public MasterMemoryData(SQLiteDataBaseSettings settings)
@@ -51,14 +51,14 @@ public class MasterMemoryData : IDisposable
     // Note:実際はAddressablesとかで読んでくると良さそう.
     private byte[] LoadBinaryData(string binaryPath)
     {
-        _op = Addressables.LoadAssetAsync<byte[]>(binaryPath);
+        _op = Addressables.LoadAssetAsync<TextAsset>(binaryPath);
         
         var data = _op.WaitForCompletion();
         if (data == null)
         {
             Debug.LogError("ファイルが見つかりません: " + binaryPath);
         }
-        return data;
+        return data.bytes;
     }
 
     public void Dispose()
