@@ -1,12 +1,12 @@
 # SqliteUnity
 
-SqliteUnityは、UnityプロジェクトでSQLite、MasterMemory、およびVContainerを利用してマスターデータ管理を行うサンプルプロジェクトです。
+SqliteUnityは、UnityプロジェクトでSQLite、MasterMemory、およびVContainerを利用してマスターデータ管理を行うサンプルプロジェクトです。<br>
 このプロジェクトは、これらのライブラリを組み合わせたデータ管理システムの構築方法を示すことを目的としています。
 
 ## 概要
 
-SqliteUnityプロジェクトでは、Unity内でSQLiteデータベースを非同期で操作する方法、MasterMemoryライブラリを使用して
-効率的なマスターデータ管理を行う方法、そしてVContainerを使用して依存関係の注入を行う方法を示しています。
+SqliteUnityプロジェクトでは、Unity内でSQLiteデータベースを非同期で操作する方法、MasterMemoryライブラリを使用して<br>
+効率的なマスターデータ管理を行う方法、そしてVContainerを使用して依存関係の注入を行う方法を示しています。<br>
 このプロジェクトは、ゲーム開発者がUnityでのデータ管理システムを構築する際の参考になることを目指しています。
 
 ## 使用ライブラリとライセンスについての注意
