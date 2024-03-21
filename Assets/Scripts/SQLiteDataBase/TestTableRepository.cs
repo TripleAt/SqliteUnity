@@ -10,9 +10,8 @@ using Tables;
 using UnityEditor;
 #endif
 
-public class TestTableRepository
+public class TestTableRepository:ITableRepository
 {
-#if Connection_MasterMemory || !UNITY_EDITOR 
     private readonly MasterMemoryData _master;
     
     [Inject]
@@ -20,29 +19,12 @@ public class TestTableRepository
     {
         _master = masterMemoryData;
     }
-#else
-    private static SQLiteDataBaseSettings _settings;
-    [Inject]
-    public TestTableRepository(SQLiteDataBaseSettings settings)
-    {
-        _settings = settings;
-    }
-#endif
     
 
     public async UniTask<ITestTable> GetDataAsync(int index)
     {
         ITestTable data;
-#if Connection_MasterMemory || !UNITY_EDITOR
         data = _master.DB.MasterMemoryTestTableTable.FindById(index);
-#else
-        var path = "";
-#if UNITY_EDITOR
-        path = AssetDatabase.GetAssetPath(_settings.SQLData);
-#endif
-        var db = new SQLiteAsyncConnection(path);
-        data = await db.GetAsync<TestTable> (index);
-#endif
        return data;
     }
 }

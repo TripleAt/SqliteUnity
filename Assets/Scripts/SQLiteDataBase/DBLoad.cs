@@ -4,7 +4,7 @@ using VContainer;
 public class DBLoad : MonoBehaviour
 {
     [Inject]
-    private TestTableRepository repository;
+    private ITableRepository repository;
     
     private async void Start()
     { 

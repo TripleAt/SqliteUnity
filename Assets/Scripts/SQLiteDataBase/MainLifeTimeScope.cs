@@ -10,7 +10,11 @@ public class MainLifeTimeScope : LifetimeScope
 
     protected override void Configure(IContainerBuilder builder)
     { 
-        builder.Register<TestTableRepository>(Lifetime.Singleton);
+#if Connection_MasterMemory || !UNITY_EDITOR 
+        builder.Register<ITableRepository, TestTableRepository>(Lifetime.Singleton);
+#else
+        builder.Register<ITableRepository, TestMasterRepository>(Lifetime.Singleton);
+#endif
         builder.Register<MasterMemoryData>(Lifetime.Singleton);
         builder.RegisterInstance(setting);
     }
